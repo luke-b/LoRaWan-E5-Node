@@ -6,6 +6,38 @@ This package contains firmware built from production profile:
 - firmware/telemetry.bin
 - firmware/telemetry.elf
 - firmware/telemetry.map
+- docs/build_manifest_full.json
+- docs/build_manifest_redacted.json
+- docs/build_manifest_summary.txt
+
+Factory lifecycle (AT firmware -> Telemetry firmware)
+----------------------------------------------------
+
+1) Incoming board is expected to run default factory AT firmware.
+2) Connect device over USB-C and confirm serial interface is visible.
+3) Switch board into STM32 ROM bootloader mode.
+4) Flash telemetry firmware with one of the methods below.
+5) Reset board and verify application boot (not AT prompt).
+6) Continue with LoRaWAN join commissioning using the manifest values.
+
+LoRaWAN commissioning checklist (per device)
+--------------------------------------------
+
+- Device identity must be unique for each installed node:
+  - DevEUI
+  - JoinEUI
+  - AppKey
+  - NwkKey
+- Confirm region and activation mode in build manifest.
+- Before field deployment, verify that this build can join the target network.
+
+Manifest usage during deployment
+--------------------------------
+
+- `build_manifest_full.json` is internal evidence for manufacturing/service.
+- `build_manifest_redacted.json` is safe for broader sharing.
+- `build_manifest_summary.txt` gives quick human-readable traceability.
+- Always archive manifest together with installation record for the specific device.
 
 Flashing options
 ----------------
@@ -39,6 +71,7 @@ Verification after flashing
 - Device boots after reset.
 - LoRaWAN join path starts.
 - Heartbeat and alarm behavior follow expected application logic.
+- Manifest values match intended deployment parameters.
 
 Notes
 -----

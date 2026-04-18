@@ -69,6 +69,38 @@ cd /workspaces/LoRaWan-E5-Node/Projects/Applications/Telemetry
 make
 ```
 
+## Build with device-specific LoRaWAN manifest (IoT engineering flow)
+
+Use this flow when preparing a production bundle for a specific new device.
+
+```bash
+cd /workspaces/LoRaWan-E5-Node/Projects/Applications/Telemetry
+
+export TELEMETRY_DEVICE_ID="PIT-DEVICE-0001"
+export TELEMETRY_SERIAL_NUMBER="SN-0001"
+export TELEMETRY_BUSINESS_PROFILE="czech-field-default"
+
+export TELEMETRY_LORAWAN_REGION="LORAMAC_REGION_EU868"
+export TELEMETRY_LORAWAN_ACTIVATION="ACTIVATION_TYPE_OTAA"
+export TELEMETRY_LORAWAN_DEVICE_EUI="0080E10123456789"
+export TELEMETRY_LORAWAN_JOIN_EUI="70B3D57ED005ABCD"
+export TELEMETRY_LORAWAN_APP_KEY="00112233445566778899AABBCCDDEEFF"
+export TELEMETRY_LORAWAN_NWK_KEY="00112233445566778899AABBCCDDEEFF"
+
+make clean all
+./scripts/package_production_artifacts.sh
+```
+
+Generated bundle now includes:
+- `docs/build_manifest_full.json` (internal manifest with full keys)
+- `docs/build_manifest_redacted.json` (masked values for sharing)
+- `docs/build_manifest_summary.txt` (human-readable checksum summary)
+
+Provisioning helper template:
+- `scripts/templates/device_provisioning.env.template`
+
+If LoRaWAN values are not set through environment variables, packaging falls back to values found in source headers.
+
 ### Build outputs
 - telemetry.elf
 - telemetry.hex
@@ -150,3 +182,4 @@ Before field deployment, run environmental testing for moisture, power stability
 - docs/COOKBOOK.md
 - docs/TEST_TRACEABILITY.md
 - docs/RELEASE_CHECKLIST.md
+- docs/IOT_ENGINEERING_LIFECYCLE.md

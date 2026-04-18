@@ -54,8 +54,24 @@ This checklist verifies that release evidence covers business logic, not only su
   - firmware files (`.elf/.hex/.bin/.map`)
   - flash scripts
   - flashing guide
+  - build manifests:
+    - `build_manifest_full.json`
+    - `build_manifest_redacted.json`
+    - `build_manifest_summary.txt`
 
-## 5. Behavioral Review (Human Sign-off)
+## 5. LoRaWAN Provisioning and Join Evidence
+
+- [ ] Build manifest contains expected LoRaWAN parameters for target deployment:
+  - region
+  - activation mode
+  - unique `device_eui`
+  - unique `join_eui`
+  - per-device `app_key`/`nwk_key`
+- [ ] Manufacturing record links device serial number to manifest `device_id`.
+- [ ] Join commissioning evidence exists for at least one representative device in the batch.
+- [ ] Any mismatch between planned and built parameters is resolved before release publish.
+
+## 6. Behavioral Review (Human Sign-off)
 
 - [ ] Message policy confirmed:
   - heartbeat is unconfirmed
@@ -66,7 +82,7 @@ This checklist verifies that release evidence covers business logic, not only su
   - tests
   - release notes
 
-## 6. Final Release Decision
+## 7. Final Release Decision
 
 Release can proceed only if all boxes above are checked.
 

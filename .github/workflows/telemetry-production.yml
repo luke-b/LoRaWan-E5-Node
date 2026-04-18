@@ -32,10 +32,29 @@ jobs:
 
       - name: Package production artifacts
         working-directory: Projects/Applications/Telemetry
+        env:
+          TELEMETRY_DEVICE_ID: ${{ vars.TELEMETRY_DEVICE_ID || 'CI-DEMO-DEVICE' }}
+          TELEMETRY_SERIAL_NUMBER: ${{ vars.TELEMETRY_SERIAL_NUMBER || 'CI-DEMO-SERIAL' }}
+          TELEMETRY_BUSINESS_PROFILE: ${{ vars.TELEMETRY_BUSINESS_PROFILE || 'ci-default' }}
+          TELEMETRY_LORAWAN_DEVICE_EUI: ${{ secrets.TELEMETRY_LORAWAN_DEVICE_EUI || '' }}
+          TELEMETRY_LORAWAN_JOIN_EUI: ${{ secrets.TELEMETRY_LORAWAN_JOIN_EUI || '' }}
+          TELEMETRY_LORAWAN_APP_KEY: ${{ secrets.TELEMETRY_LORAWAN_APP_KEY || '' }}
+          TELEMETRY_LORAWAN_NWK_KEY: ${{ secrets.TELEMETRY_LORAWAN_NWK_KEY || '' }}
+          TELEMETRY_LORAWAN_REGION: ${{ vars.TELEMETRY_LORAWAN_REGION || 'LORAMAC_REGION_EU868' }}
+          TELEMETRY_LORAWAN_ACTIVATION: ${{ vars.TELEMETRY_LORAWAN_ACTIVATION || 'ACTIVATION_TYPE_OTAA' }}
+          TELEMETRY_HEARTBEAT_MS: ${{ vars.TELEMETRY_HEARTBEAT_MS || '30000' }}
         run: |
           chmod +x scripts/package_production_artifacts.sh
           ./scripts/package_production_artifacts.sh
           ls -lah production-artifacts
+
+      - name: Validate manifest files in production bundle
+        run: |
+          set -euo pipefail
+          BUNDLE="Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip"
+          unzip -l "$BUNDLE" | grep -q "wio-e5-telemetry-production/docs/build_manifest_full.json"
+          unzip -l "$BUNDLE" | grep -q "wio-e5-telemetry-production/docs/build_manifest_redacted.json"
+          unzip -l "$BUNDLE" | grep -q "wio-e5-telemetry-production/docs/build_manifest_summary.txt"
 
       - name: Upload production artifact bundle
         uses: actions/upload-artifact@v4
@@ -48,16 +67,33 @@ jobs:
       - name: Summary
         if: always()
         run: |
+          set -euo pipefail
+          BUNDLE="Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip"
+          unzip -p "$BUNDLE" wio-e5-telemetry-production/docs/build_manifest_redacted.json > /tmp/build_manifest_redacted.json
+          echo "MANIFEST_GIT_SHA=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["build"]["git_sha"])')" >> $GITHUB_ENV
+          echo "MANIFEST_DEVICE_ID=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["device"]["device_id"])')" >> $GITHUB_ENV
+          echo "MANIFEST_REGION=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["lorawan"]["region"])')" >> $GITHUB_ENV
+          echo "MANIFEST_PROFILE=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["business_logic"]["profile"])')" >> $GITHUB_ENV
+
           echo "## Telemetry Production Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Production firmware build and packaging completed." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Bundle contents" >> $GITHUB_STEP_SUMMARY
-          unzip -l Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip >> $GITHUB_STEP_SUMMARY
+          unzip -l "$BUNDLE" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build manifest (redacted)" >> $GITHUB_STEP_SUMMARY
+          echo '```json' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/build_manifest_redacted.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Release Evidence Snippet" >> $GITHUB_STEP_SUMMARY
           echo '```text' >> $GITHUB_STEP_SUMMARY
           echo "Production artifact evidence complete on commit ${GITHUB_SHA}." >> $GITHUB_STEP_SUMMARY
+          echo "Manifest git_sha: ${MANIFEST_GIT_SHA}" >> $GITHUB_STEP_SUMMARY
+          echo "Manifest device_id: ${MANIFEST_DEVICE_ID}" >> $GITHUB_STEP_SUMMARY
+          echo "Manifest region: ${MANIFEST_REGION}" >> $GITHUB_STEP_SUMMARY
+          echo "Manifest business profile: ${MANIFEST_PROFILE}" >> $GITHUB_STEP_SUMMARY
           echo "Telemetry Production Build workflow: success." >> $GITHUB_STEP_SUMMARY
           echo "Artifact: telemetry-production-bundle." >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
