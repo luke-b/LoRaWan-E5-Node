@@ -78,6 +78,22 @@ jobs:
                 cat "$ARTIFACTS_DIR/requirement_coverage.txt" >> $GITHUB_STEP_SUMMARY
                 echo '```' >> $GITHUB_STEP_SUMMARY
               fi
+
+              req_rows="unknown"
+              pending_rows="unknown"
+              if [ -f "$ARTIFACTS_DIR/requirement_coverage.txt" ]; then
+                req_rows=$(grep -E '^Total requirements:' "$ARTIFACTS_DIR/requirement_coverage.txt" | awk -F': ' '{print $2}' | tr -d '\r' || echo "unknown")
+                pending_rows=$(grep -E '^Rows with Pending:' "$ARTIFACTS_DIR/requirement_coverage.txt" | awk -F': ' '{print $2}' | tr -d '\r' || echo "unknown")
+              fi
+
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Release Evidence Snippet" >> $GITHUB_STEP_SUMMARY
+              echo '```text' >> $GITHUB_STEP_SUMMARY
+              echo "Business logic evidence complete on commit ${GITHUB_SHA}." >> $GITHUB_STEP_SUMMARY
+              echo "Telemetry Emulation workflow: success." >> $GITHUB_STEP_SUMMARY
+              echo "Requirement coverage: ${req_rows} REQ rows, Pending=${pending_rows}." >> $GITHUB_STEP_SUMMARY
+              echo "Artifact: telemetry-emulation-reports." >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "❌ **Status**: FAILED" >> $GITHUB_STEP_SUMMARY

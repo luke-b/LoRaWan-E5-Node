@@ -54,3 +54,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Bundle contents" >> $GITHUB_STEP_SUMMARY
           unzip -l Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Evidence Snippet" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          echo "Production artifact evidence complete on commit ${GITHUB_SHA}." >> $GITHUB_STEP_SUMMARY
+          echo "Telemetry Production Build workflow: success." >> $GITHUB_STEP_SUMMARY
+          echo "Artifact: telemetry-production-bundle." >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
