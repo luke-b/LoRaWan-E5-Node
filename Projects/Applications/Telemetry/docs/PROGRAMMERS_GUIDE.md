@@ -76,3 +76,7 @@ When adding files, update:
 - Use trace outputs from adv_trace/usart_if path
 - Inspect telemetry.map for symbol/link surprises
 - Verify stack and memory footprints using arm-none-eabi-size and map file
+
+## Release governance
+- Keep business logic traceability in docs/TEST_TRACEABILITY.md up to date.
+- Use docs/RELEASE_CHECKLIST.md before publishing any firmware release.

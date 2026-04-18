@@ -148,3 +148,5 @@ Before field deployment, run environmental testing for moisture, power stability
 - docs/USER_GUIDE.md
 - docs/PROGRAMMERS_GUIDE.md
 - docs/COOKBOOK.md
+- docs/TEST_TRACEABILITY.md
+- docs/RELEASE_CHECKLIST.md
