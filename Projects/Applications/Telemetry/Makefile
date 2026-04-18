@@ -67,6 +67,7 @@ SRC_FILES = \
 	./Core/Src/main.c \
 	./Core/Src/system_stm32wlxx.c \
 	./Core/Src/telemetry_logic.c \
+	./Core/Src/telemetry_app.c \
 	./Core/Src/stm32wlxx_hal_msp.c \
 	./Core/Src/sys_app.c \
 	./Core/Src/adc_if.c \

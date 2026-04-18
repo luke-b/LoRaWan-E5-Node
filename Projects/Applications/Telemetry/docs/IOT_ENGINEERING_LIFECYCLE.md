@@ -119,6 +119,17 @@ If join fails:
 - verify region mismatch second
 - verify RF gateway coverage third
 
+## 6.5. Field Test Mode Verification (Optional Post-Join)
+
+After successful LoRaWAN join, quickly verify uplink connectivity using the built-in field test mode:
+
+1. Follow [FIELD_TEST_MODE_SOP.md](FIELD_TEST_MODE_SOP.md): Press button for 2+ seconds.
+2. Device LED blinks 5 times; test message is sent to CRA network.
+3. Verify message receipt in CRA IoT portal within 30 seconds.
+4. Capture screenshot as deployment evidence.
+
+This step is **optional but recommended** to catch connectivity issues before field installation.
+
 ## 7. Deployment Handover
 
 Before field installation, archive:
@@ -160,3 +171,4 @@ Lifecycle is compliant only when all are true:
 
 - `docs/FACTORY_USB_C_FLASH_SOP.md`
 - `docs/CRA_LORAWAN_JOIN_SOP.md`
+- `docs/FIELD_TEST_MODE_SOP.md`

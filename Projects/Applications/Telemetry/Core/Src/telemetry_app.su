@@ -1,3 +1,4 @@
 Core/Src/telemetry_app.c:3:6:Telemetry_InitState	16	static
 Core/Src/telemetry_app.c:14:6:Telemetry_UpdatePulseCounter	16	static
 Core/Src/telemetry_app.c:33:6:Telemetry_BuildPayload	16	static
+Core/Src/telemetry_app.c:65:6:Telemetry_BuildTestMessage	16	static

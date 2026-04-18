@@ -1,7 +1,7 @@
-/workspace/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1972:22:LL_RCC_SetClkAfterWakeFromStop	16	static
-/workspace/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:1879:26:LL_FLASH_GetUDN	4	static
-/workspace/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:1889:26:LL_FLASH_GetDeviceID	4	static
-/workspace/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:1899:26:LL_FLASH_GetSTCompanyID	4	static
+/workspaces/LoRaWan-E5-Node/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1972:22:LL_RCC_SetClkAfterWakeFromStop	16	static
+/workspaces/LoRaWan-E5-Node/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:1879:26:LL_FLASH_GetUDN	4	static
+/workspaces/LoRaWan-E5-Node/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:1889:26:LL_FLASH_GetDeviceID	4	static
+/workspaces/LoRaWan-E5-Node/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:1899:26:LL_FLASH_GetSTCompanyID	4	static
 Core/Src/sys_app.c:88:6:SystemApp_Init	8	static
 Core/Src/sys_app.c:139:6:UTIL_SEQ_Idle	8	static
 Core/Src/sys_app.c:150:9:GetBatteryLevel	24	static

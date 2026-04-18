@@ -11,6 +11,7 @@ typedef enum
   TELEMETRY_MSG_TYPE_HEARTBEAT = 0x01,
   TELEMETRY_MSG_TYPE_ALARM_DOOR = 0x02,
   TELEMETRY_MSG_TYPE_ALARM_WATER = 0x03,
+  TELEMETRY_MSG_TYPE_TEST = 0x04,
 } TelemetryMessageType_t;
 
 typedef struct
@@ -30,5 +31,6 @@ void Telemetry_InitState(TelemetryState_t *state, uint16_t initialCounter);
 void Telemetry_UpdatePulseCounter(TelemetryState_t *state, uint16_t currentCounter);
 void Telemetry_BuildPayload(TelemetryState_t *state, uint16_t currentCounter, TelemetryMessageType_t msgType,
                             uint8_t batteryLevel, bool doorOpen, bool waterDetected, TelemetryPayload_t *payload);
+void Telemetry_BuildTestMessage(uint32_t deviceId, TelemetryPayload_t *payload);
 
 #endif

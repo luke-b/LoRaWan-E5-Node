@@ -189,3 +189,4 @@ Before field deployment, run environmental testing for moisture, power stability
 - docs/IOT_ENGINEERING_LIFECYCLE.md
 - docs/FACTORY_USB_C_FLASH_SOP.md
 - docs/CRA_LORAWAN_JOIN_SOP.md
+- docs/FIELD_TEST_MODE_SOP.md

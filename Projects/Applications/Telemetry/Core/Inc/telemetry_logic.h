@@ -10,6 +10,7 @@ typedef enum
   TELEMETRY_EVENT_ACTION_SEND_HEARTBEAT = 1,
   TELEMETRY_EVENT_ACTION_SEND_ALARM_DOOR = 2,
   TELEMETRY_EVENT_ACTION_SEND_ALARM_WATER = 3,
+  TELEMETRY_EVENT_ACTION_SEND_TEST = 4,
 } TelemetryEventAction_t;
 
 void Telemetry_ConsumeWakeFlags(volatile uint8_t *doorFlag, volatile uint8_t *rtcFlag,

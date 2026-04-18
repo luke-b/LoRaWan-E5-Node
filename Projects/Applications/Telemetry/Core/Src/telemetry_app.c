@@ -61,3 +61,21 @@ void Telemetry_BuildPayload(TelemetryState_t *state, uint16_t currentCounter, Te
   payload->size = TELEMETRY_PAYLOAD_SIZE;
   payload->confirmed = (msgType != TELEMETRY_MSG_TYPE_HEARTBEAT);
 }
+
+void Telemetry_BuildTestMessage(uint32_t deviceId, TelemetryPayload_t *payload)
+{
+  if (payload == 0)
+  {
+    return;
+  }
+
+  /* Test payload: 5 bytes → [message_type(1) | device_id(4)] */
+  payload->bytes[0] = (uint8_t)TELEMETRY_MSG_TYPE_TEST;
+  payload->bytes[1] = (uint8_t)((deviceId >> 24) & 0xFFU);
+  payload->bytes[2] = (uint8_t)((deviceId >> 16) & 0xFFU);
+  payload->bytes[3] = (uint8_t)((deviceId >> 8) & 0xFFU);
+  payload->bytes[4] = (uint8_t)(deviceId & 0xFFU);
+
+  payload->size = 5U;
+  payload->confirmed = false;  /* Test messages sent unconfirmed to reduce retries */
+}

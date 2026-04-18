@@ -43,6 +43,7 @@ void MX_ADC_Init(void);
 // --- GLOBÁLNÍ PROMĚNNÉ (State Machine) ---
 volatile uint8_t flag_door_alarm = 0;          // Příznak probuzení: Otevřené dveře
 volatile uint8_t flag_rtc_wakeup = 0;          // Příznak probuzení: 24h časovač
+volatile uint8_t flag_test_requested = 0;      // Příznak: Test mode aktivován dlouhým stiskem tlačítka
 
 uint32_t total_water_pulses = 0;               // 32-bit akumulátor pulzů (odolný proti LPTIM přetečení)
 uint16_t last_lptim_val = 0;                   // Poslední přečtená hodnota z HW čítače

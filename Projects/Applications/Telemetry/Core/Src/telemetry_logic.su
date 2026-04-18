@@ -1,0 +1,5 @@
+Core/Src/telemetry_logic.c:3:6:Telemetry_ConsumeWakeFlags	24	static
+Core/Src/telemetry_logic.c:18:24:Telemetry_EvaluateDoorEvent	16	static
+Core/Src/telemetry_logic.c:28:24:Telemetry_EvaluatePeriodicEvent	16	static
+Core/Src/telemetry_logic.c:38:24:Telemetry_HandleDoorWake	16	static
+Core/Src/telemetry_logic.c:48:24:Telemetry_HandlePeriodicWake	16	static

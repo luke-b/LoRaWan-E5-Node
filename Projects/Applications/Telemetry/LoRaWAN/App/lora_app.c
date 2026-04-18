@@ -37,6 +37,7 @@
 #include "sys_conf.h"
 #include "CayenneLpp.h"
 #include "sys_sensors.h"
+#include "telemetry_app.h"
 
 /* USER CODE BEGIN Includes */
 extern volatile uint8_t flag_door_alarm;
@@ -117,6 +118,17 @@ static void OnRxData(LmHandlerAppData_t *appData, LmHandlerRxParams_t *params);
  *
  */
 static void OnMacProcessNotify(void);
+
+/**
+  * @brief  Button long-press timer callback (2+ seconds)
+  * @param  context ptr of timer context
+  */
+static void OnButtonLongPressTimer(void *context);
+
+/**
+  * @brief  Start LED blink sequence for test mode feedback
+  */
+static void StartTestLedBlinkSequence(void);
 
 /* USER CODE BEGIN PFP */
 
@@ -211,6 +223,31 @@ static UTIL_TIMER_Object_t RxLedTimer;
   */
 static UTIL_TIMER_Object_t JoinLedTimer;
 
+/**
+  * @brief Timer to detect button long-press (2+ seconds)
+  */
+static UTIL_TIMER_Object_t ButtonLongPressTimer;
+
+/**
+  * @brief Timer for LED blink sequence (test mode feedback)
+  */
+static UTIL_TIMER_Object_t TestLedBlinkTimer;
+
+/**
+  * @brief Counter for LED blink sequence (5 blinks)
+  */
+static uint8_t test_blink_count = 0;
+
+/**
+  * @brief Tracks if button is currently pressed
+  */
+static uint8_t button_pressed = 0;
+
+/**
+  * @brief Test mode activation flag set by long-press timer
+  */
+extern volatile uint8_t flag_test_requested;
+
 /* USER CODE END PV */
 
 /* Exported functions ---------------------------------------------------------*/
@@ -304,7 +341,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     case  BUTTON_SW1_PIN:
       /* Note: when "EventType == TX_ON_TIMER" this GPIO is not initialized */
-      UTIL_SEQ_SetTask((1 << CFG_SEQ_Task_LoRaSendOnTxTimerOrButtonEvent), CFG_SEQ_Prio_0);
+      /* Button long-press detection (2+ seconds) for test mode */
+      if (button_pressed == 0)
+      {
+        /* Button pressed: start long-press detection timer (2000 ms) */
+        button_pressed = 1;
+        UTIL_TIMER_Create(&ButtonLongPressTimer, 0xFFFFFFFFU, UTIL_TIMER_ONESHOT, 
+                         OnButtonLongPressTimer, NULL);
+        UTIL_TIMER_SetPeriod(&ButtonLongPressTimer, 2000U);
+        UTIL_TIMER_Start(&ButtonLongPressTimer);
+      }
+      else
+      {
+        /* Button released: stop long-press timer if still running (short press) */
+        UTIL_TIMER_Stop(&ButtonLongPressTimer);
+        button_pressed = 0;
+      }
       break;
     case DOOR_CONTACT_PIN:
       if (HAL_GPIO_ReadPin(DOOR_CONTACT_PORT, DOOR_CONTACT_PIN) == GPIO_PIN_SET)
@@ -393,6 +445,43 @@ static void OnRxData(LmHandlerAppData_t *appData, LmHandlerRxParams_t *params)
 static void SendTxData(void)
 {
   /* USER CODE BEGIN SendTxData_1 */
+  
+  /* Check if this is a test message request (high priority over regular telemetry) */
+  if (flag_test_requested)
+  {
+    /* Handle test mode message */
+    flag_test_requested = 0;  /* Clear flag */
+    
+    /* Start LED blink sequence (5 rapid blinks) */
+    StartTestLedBlinkSequence();
+    
+    /* Build and send minimal test message with device ID */
+    /* For now, use a simple device ID (0x12345678 as example; should be provisioned) */
+    uint32_t device_id = 0x12345678U;  /* TODO: Read from provisioning data */
+    TelemetryPayload_t testPayload;
+    Telemetry_BuildTestMessage(device_id, &testPayload);
+    
+    /* Copy test payload to LoRaWAN buffer */
+    AppData.Port = LORAWAN_USER_APP_PORT;
+    for (uint8_t i = 0; i < testPayload.size; i++)
+    {
+      AppData.Buffer[i] = testPayload.bytes[i];
+    }
+    AppData.BufferSize = testPayload.size;
+    
+    /* Send test message (unconfirmed) */
+    UTIL_TIMER_Time_t nextTxIn = 0;
+    if (LORAMAC_HANDLER_SUCCESS == LmHandlerSend(&AppData, LORAMAC_HANDLER_UNCONFIRMED_MSG, &nextTxIn, false))
+    {
+      APP_LOG(TS_ON, VLEVEL_L, "TEST MESSAGE SENT\r\n");
+    }
+    else if (nextTxIn > 0)
+    {
+      APP_LOG(TS_ON, VLEVEL_L, "Next Tx in  : ~%d second(s)\r\n", (nextTxIn / 1000));
+    }
+    return;  /* Exit early, don't process regular telemetry */
+  }
+  
   uint16_t pressure = 0;
   int16_t temperature = 0;
   sensor_t sensor_data;
@@ -506,6 +595,47 @@ static void OnRxTimerLedEvent(void *context)
 static void OnJoinTimerLedEvent(void *context)
 {
   BSP_LED_Toggle(LED_RED) ;
+}
+
+static void OnButtonLongPressTimer(void *context)
+{
+  /* 2+ second button hold detected; set test mode flag and queue message send */
+  flag_test_requested = 1;
+  button_pressed = 0;  /* Reset press state for next detection */
+  
+  /* Queue the LoRa send task to process the test message */
+  UTIL_SEQ_SetTask((1 << CFG_SEQ_Task_LoRaSendOnTxTimerOrButtonEvent), CFG_SEQ_Prio_0);
+}
+
+static void OnTestLedBlinkTimer(void *context)
+{
+  /* Blink LED: 100ms ON, 100ms OFF pattern, 5 blinks total (~1 sec) */
+  test_blink_count++;
+  
+  if (test_blink_count <= 10)
+  {
+    /* Toggle LED every 100ms for 5 blinks (10 toggles) */
+    BSP_LED_Toggle(LED_RED);
+    UTIL_TIMER_Start(&TestLedBlinkTimer);
+  }
+  else
+  {
+    /* Blink sequence complete, ensure LED is off */
+    test_blink_count = 0;
+    BSP_LED_Off(LED_RED);
+  }
+}
+
+static void StartTestLedBlinkSequence(void)
+{
+  /* Initialize and start LED blink sequence (5 rapid blinks) */
+  test_blink_count = 0;
+  BSP_LED_Off(LED_RED);  /* Start with LED off */
+  
+  UTIL_TIMER_Create(&TestLedBlinkTimer, 0xFFFFFFFFU, UTIL_TIMER_ONESHOT, 
+                   OnTestLedBlinkTimer, NULL);
+  UTIL_TIMER_SetPeriod(&TestLedBlinkTimer, 100U);  /* 100ms per blink state */
+  UTIL_TIMER_Start(&TestLedBlinkTimer);
 }
 
 /* USER CODE END PrFD_LedEvents */

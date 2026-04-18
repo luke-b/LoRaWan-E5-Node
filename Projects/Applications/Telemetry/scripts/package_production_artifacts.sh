@@ -264,10 +264,12 @@ full_manifest = {
     "profile": os.environ["MANIFEST_BUSINESS_PROFILE"],
     "heartbeat_period_ms": os.environ["MANIFEST_DUTY_CYCLE_MS"],
     "payload_size_bytes": os.environ["MANIFEST_PAYLOAD_SIZE"],
+    "test_mode_enabled": True,
     "message_types": {
       "heartbeat": "0x01",
       "door_alarm": "0x02",
       "water_alarm": "0x03",
+      "test": "0x04",
     },
   },
   "artifacts": firmware_artifacts,
