@@ -155,3 +155,8 @@ Lifecycle is compliant only when all are true:
 - Flash was executed from approved production bundle.
 - CRA join succeeded with the same manifest values.
 - Service/decommission actions remain traceable to manifest and build SHA.
+
+## Related SOP Documents
+
+- `docs/FACTORY_USB_C_FLASH_SOP.md`
+- `docs/CRA_LORAWAN_JOIN_SOP.md`
