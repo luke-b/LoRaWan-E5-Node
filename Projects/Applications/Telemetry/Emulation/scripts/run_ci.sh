@@ -80,8 +80,45 @@ if ! renode-test Emulation/tests/integration_tests.robot \
 fi
 log "  ✓ All emulation tests passed"
 
-# Step 5: Collect reports
-log "Step 5: Collecting test reports..."
+# Step 5: Validate requirement traceability coverage
+log "Step 5: Validating requirement traceability coverage..."
+TRACEABILITY_FILE="${PROJECT_DIR}/docs/TEST_TRACEABILITY.md"
+REQ_COVERAGE_REPORT="${ARTIFACTS_DIR}/requirement_coverage.txt"
+
+if [[ ! -f "${TRACEABILITY_FILE}" ]]; then
+  error "Traceability file not found: ${TRACEABILITY_FILE}"
+  exit 1
+fi
+
+total_requirements=$(grep -E '^\|[[:space:]]*REQ-[0-9]+' "${TRACEABILITY_FILE}" | wc -l | tr -d ' ')
+pending_references=$(grep -E '^\|[[:space:]]*REQ-[0-9]+' "${TRACEABILITY_FILE}" | grep -c 'Pending' || true)
+
+if [[ "${total_requirements}" -eq 0 ]]; then
+  error "No REQ-* rows found in traceability matrix."
+  exit 1
+fi
+
+{
+  echo "Telemetry Requirement Coverage"
+  echo "============================="
+  echo "Traceability file: ${TRACEABILITY_FILE}"
+  echo "Total requirements: ${total_requirements}"
+  echo "Rows with Pending: ${pending_references}"
+  echo
+  echo "Requirement rows:"
+  grep -E '^\|[[:space:]]*REQ-[0-9]+' "${TRACEABILITY_FILE}"
+} > "${REQ_COVERAGE_REPORT}"
+
+if [[ "${pending_references}" -ne 0 ]]; then
+  error "Traceability has ${pending_references} requirement row(s) with Pending references."
+  error "See ${REQ_COVERAGE_REPORT} for details."
+  exit 1
+fi
+
+log "  ✓ Traceability coverage validated (${total_requirements} REQ rows, 0 pending)"
+
+# Step 6: Collect reports
+log "Step 6: Collecting test reports..."
 report_count=0
 for file in report.html log.html; do
   if [[ -f "${PROJECT_DIR}/${file}" ]]; then
@@ -93,7 +130,7 @@ for file in report.html log.html; do
   fi
 done
 
-# Step 6: Copy ELF to artifacts
+# Step 7: Copy ELF to artifacts
 cp "${PROJECT_DIR}/telemetry_emulation.elf" "${ARTIFACTS_DIR}/"
 log "  ✓ Copied telemetry_emulation.elf"
 
@@ -103,6 +140,7 @@ log "========== CI SUMMARY =========="
 log "Unit:      ✓ PASSED"
 log "Build:     ✓ PASSED"
 log "Tests:     ✓ PASSED"
+log "ReqCov:    ✓ PASSED (${total_requirements} REQ rows)"
 log "Reports:   ✓ ${report_count} file(s)"
 log "Artifacts: ${ARTIFACTS_DIR}"
 log "=============================="

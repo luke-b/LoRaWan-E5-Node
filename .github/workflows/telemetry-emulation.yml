@@ -71,6 +71,13 @@ jobs:
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "### Artifacts:" >> $GITHUB_STEP_SUMMARY
               ls -1 "$ARTIFACTS_DIR" | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+              if [ -f "$ARTIFACTS_DIR/requirement_coverage.txt" ]; then
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "### Requirement Coverage" >> $GITHUB_STEP_SUMMARY
+                echo '```text' >> $GITHUB_STEP_SUMMARY
+                cat "$ARTIFACTS_DIR/requirement_coverage.txt" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+              fi
             fi
           else
             echo "❌ **Status**: FAILED" >> $GITHUB_STEP_SUMMARY
