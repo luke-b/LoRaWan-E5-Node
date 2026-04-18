@@ -1,0 +1,68 @@
+# COPY & PASTE COMMANDS - Git Push for Telemetry CI
+
+**Run these commands on your local machine from repository root**
+
+---
+
+## SINGLE COMMAND (All-in-One)
+
+```bash
+git add Projects/Applications/Telemetry/Emulation/scripts/run_ci.sh Projects/Applications/Telemetry/README.md Projects/Applications/Telemetry/docs/PROGRAMMERS_GUIDE.md .github/workflows/telemetry-emulation.yml && git commit -m "enhance(telemetry): improve CI logging, documentation, and error handling
+
+- Enhanced run_ci.sh with color-coded logging and detailed validation steps
+- Updated .github/workflows/telemetry-emulation.yml with step summary generation
+- Expanded docs/PROGRAMMERS_GUIDE.md with complete CI setup and troubleshooting guide
+- Updated README.md with Docker CI and GitHub Actions instructions
+- Added toolchain verification, artifact validation, and enhanced error reporting
+
+This improves CI transparency and helps developers understand the emulation test flow." && git push origin main
+```
+
+---
+
+## OR: STEP-BY-STEP COMMANDS
+
+### Step 1: Add files
+```bash
+git add Projects/Applications/Telemetry/Emulation/scripts/run_ci.sh
+git add Projects/Applications/Telemetry/README.md
+git add Projects/Applications/Telemetry/docs/PROGRAMMERS_GUIDE.md
+git add .github/workflows/telemetry-emulation.yml
+```
+
+### Step 2: Verify
+```bash
+git status
+```
+
+### Step 3: Commit
+```bash
+git commit -m "enhance(telemetry): improve CI logging, documentation, and error handling
+
+- Enhanced run_ci.sh with color-coded logging and detailed validation steps
+- Updated .github/workflows/telemetry-emulation.yml with step summary generation
+- Expanded docs/PROGRAMMERS_GUIDE.md with complete CI setup and troubleshooting guide
+- Updated README.md with Docker CI and GitHub Actions instructions
+- Added toolchain verification, artifact validation, and enhanced error reporting
+
+This improves CI transparency and helps developers understand the emulation test flow."
+```
+
+### Step 4: Push to GitHub
+```bash
+git push origin main
+```
+
+---
+
+## OR: Use Provided Script
+
+```bash
+bash push_changes.sh
+```
+
+---
+
+**After push, watch:** https://github.com/Seeed-Studio/LoRaWan-E5-Node/actions
+
+Expected time: **5-10 minutes for full CI run**

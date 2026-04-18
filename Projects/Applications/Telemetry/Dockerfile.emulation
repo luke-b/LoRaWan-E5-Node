@@ -1,0 +1,35 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       ca-certificates \
+       curl \
+       git \
+       make \
+       python3 \
+       python3-pip \
+       python3-venv \
+       software-properties-common \
+       wget \
+       xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/toolchains /opt/renode
+
+RUN wget -q https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz \
+    -O /tmp/arm-toolchain.tar.xz \
+    && tar -xJf /tmp/arm-toolchain.tar.xz -C /opt/toolchains \
+    && rm /tmp/arm-toolchain.tar.xz
+
+RUN wget -q https://builds.renode.io/renode-latest.linux-portable.tar.gz \
+    -O /tmp/renode.tar.gz \
+    && tar -xzf /tmp/renode.tar.gz -C /opt/renode \
+    && rm /tmp/renode.tar.gz
+
+RUN python3 -m pip install --no-cache-dir robotframework
+
+ENV PATH="/opt/toolchains/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin:/opt/renode:${PATH}"
+
+WORKDIR /workspace

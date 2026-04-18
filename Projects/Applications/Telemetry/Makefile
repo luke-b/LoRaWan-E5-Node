@@ -11,11 +11,21 @@ SIZE = arm-none-eabi-size
 # Project name
 TARGET = telemetry
 
+BUILD_PROFILE ?= hardware
+
+ifeq ($(BUILD_PROFILE),emulation)
+TARGET = telemetry_emulation
+endif
+
 # MCU
 MCU = -mcpu=cortex-m4 -mthumb
 
 # Defines
 DEFINES = -DSTM32WLE5xx -DUSE_HAL_DRIVER -DDEBUG
+
+ifeq ($(BUILD_PROFILE),emulation)
+DEFINES = -DDEBUG
+endif
 
 # Project root
 ROOT = /workspaces/LoRaWan-E5-Node
@@ -23,6 +33,7 @@ ROOT = /workspaces/LoRaWan-E5-Node
 # Includes
 INC_DIRS = \
 	-I./Core/Inc \
+	-I./Emulation/Inc \
 	-I./LoRaWAN/App \
 	-I./LoRaWAN/Target \
 	-I$(ROOT)/Middlewares/Third_Party/LoRaWAN/Mac \
@@ -45,7 +56,20 @@ INC_DIRS = \
 	-I$(ROOT)/Utilities/trace \
 	-I$(ROOT)/Utilities/trace/adv_trace
 
-# Source files
+
+COMMON_SRC_FILES = \
+	./Core/Src/telemetry_app.c
+
+ifeq ($(BUILD_PROFILE),emulation)
+SRC_FILES = \
+	./Emulation/Src/main_emulation.c \
+	./Emulation/Src/telemetry_emulation_log.c \
+	./Emulation/Src/system_init_stub.c \
+	$(COMMON_SRC_FILES)
+
+STARTUP = ./startup_stm32wle5jcix.s
+LDSCRIPT = ./STM32WLE5JCIX_FLASH.ld
+else
 SRC_FILES = \
 	./Core/Src/main.c \
 	./Core/Src/system_stm32wlxx.c \
@@ -102,13 +126,12 @@ SRC_FILES = \
 	$(ROOT)/Utilities/misc/stm32_tiny_vsnprintf.c \
 	$(ROOT)/Utilities/sequencer/stm32_seq.c \
 	$(ROOT)/Utilities/timer/stm32_timer.c \
-	$(ROOT)/Utilities/trace/adv_trace/stm32_adv_trace.c
+	$(ROOT)/Utilities/trace/adv_trace/stm32_adv_trace.c \
+	$(COMMON_SRC_FILES)
 
-# Startup file
 STARTUP = ./startup_stm32wle5jcix.s
-
-# Linker script
 LDSCRIPT = ./STM32WLE5JCIX_FLASH.ld
+endif
 
 # Flags
 CFLAGS = $(MCU) $(DEFINES) $(INC_DIRS) -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -fdata-sections -fstack-usage

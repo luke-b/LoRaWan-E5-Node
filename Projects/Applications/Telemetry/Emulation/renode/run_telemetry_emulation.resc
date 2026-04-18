@@ -1,0 +1,7 @@
+using @./wio_e5_telemetry_emulation.repl
+
+mach create
+machine LoadPlatformDescription @./wio_e5_telemetry_emulation.repl
+sysbus LoadELF @../telemetry_emulation.elf
+
+showAnalyzer sysbus.uart1

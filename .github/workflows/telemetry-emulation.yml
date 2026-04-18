@@ -1,0 +1,79 @@
+name: Telemetry Emulation
+
+on:
+  push:
+    paths:
+      - .github/workflows/telemetry-emulation.yml
+      - Projects/Applications/Telemetry/**
+  pull_request:
+    paths:
+      - .github/workflows/telemetry-emulation.yml
+      - Projects/Applications/Telemetry/**
+  workflow_dispatch:
+
+jobs:
+  telemetry-emulation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build CI Docker image
+        run: |
+          echo "Building Docker image for Telemetry emulation CI..."
+          docker build -t telemetry-emulation-ci -f Projects/Applications/Telemetry/Dockerfile.emulation .
+          echo "Docker image built successfully"
+          docker images | grep telemetry-emulation-ci
+
+      - name: Run build and Renode tests in container
+        id: docker-run
+        run: |
+          echo "Starting Docker container for CI execution..."
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            telemetry-emulation-ci \
+            bash Projects/Applications/Telemetry/Emulation/scripts/run_ci.sh
+          echo "Docker CI execution completed successfully"
+
+      - name: Verify artifacts were created
+        if: always()
+        run: |
+          ARTIFACTS_DIR="Projects/Applications/Telemetry/emulation-artifacts"
+          if [ -d "$ARTIFACTS_DIR" ]; then
+            echo "✓ Artifacts directory exists"
+            ls -la "$ARTIFACTS_DIR"
+          else
+            echo "⚠ Artifacts directory not found - tests may have failed"
+            exit 1
+          fi
+
+      - name: Upload emulation reports and artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetry-emulation-reports
+          path: |
+            Projects/Applications/Telemetry/emulation-artifacts/**
+            Projects/Applications/Telemetry/telemetry_emulation.elf
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Telemetry Emulation CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ ${{ steps.docker-run.outcome }} == 'success' ]; then
+            echo "✅ **Status**: PASSED" >> $GITHUB_STEP_SUMMARY
+            ARTIFACTS_DIR="Projects/Applications/Telemetry/emulation-artifacts"
+            if [ -d "$ARTIFACTS_DIR" ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### Artifacts:" >> $GITHUB_STEP_SUMMARY
+              ls -1 "$ARTIFACTS_DIR" | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **Status**: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          fi

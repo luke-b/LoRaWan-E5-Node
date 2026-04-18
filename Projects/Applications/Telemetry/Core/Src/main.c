@@ -13,6 +13,7 @@
 #include "main.h"
 #include "stm32wlxx_hal.h"
 #include <stdbool.h>
+#include "telemetry_app.h"
 // Hlavičkové soubory pro LoRaWAN MAC vrstvu (poskytuje STMicroelectronics)
 #include "app_lorawan.h"
 #include "sys_app.h"
@@ -43,8 +44,7 @@ void MX_ADC_Init(void);
 volatile uint8_t flag_door_alarm = 0;          // Příznak probuzení: Otevřené dveře
 volatile uint8_t flag_rtc_wakeup = 0;          // Příznak probuzení: 24h časovač
 
-uint32_t total_water_pulses = 0;               // 32-bit akumulátor pulzů (odolný proti LPTIM přetečení)
-uint16_t last_lptim_val = 0;                   // Poslední přečtená hodnota z HW čítače
+static TelemetryState_t telemetryState;
 
 // Deklarace HW handlů (standard STM32 HAL)
 LPTIM_HandleTypeDef hlptim1;
@@ -82,15 +82,7 @@ uint8_t CheckWaterLeak(void) {
  * @brief Aktualizuje 32-bitový akumulátor pulzů z 16-bitového HW čítače.
  */
 void UpdatePulseCounter(void) {
-    uint16_t current_lptim = HAL_LPTIM_ReadCounter(&hlptim1);
-    
-    // Ošetření přetečení 16bitového čítače (65535 -> 0)
-    if (current_lptim >= last_lptim_val) {
-        total_water_pulses += (current_lptim - last_lptim_val);
-    } else {
-        total_water_pulses += ((65535 - last_lptim_val) + current_lptim + 1);
-    }
-    last_lptim_val = current_lptim;
+  Telemetry_UpdatePulseCounter(&telemetryState, HAL_LPTIM_ReadCounter(&hlptim1));
 }
 
 /**
@@ -98,34 +90,25 @@ void UpdatePulseCounter(void) {
  */
 void SendLoraMessage(uint8_t msg_type) {
     LmHandlerAppData_t appData;
-    uint8_t payload[8];
+  TelemetryPayload_t payload;
     uint8_t battery_level = GetBatteryLevel(); // Interní funkce STM32WL (měření VREFINT)
-    uint8_t door_state = HAL_GPIO_ReadPin(DOOR_CONTACT_PORT, DOOR_CONTACT_PIN); // 1 = otevřeno
-    
-    UpdatePulseCounter();
+  bool door_open = (HAL_GPIO_ReadPin(DOOR_CONTACT_PORT, DOOR_CONTACT_PIN) == GPIO_PIN_SET);
+  bool water_detected = (msg_type == MSG_TYPE_ALARM_WATER);
 
-    payload[0] = msg_type;
-    
-    // Pulzy: 32-bit hodnota rozdělená na byty (Big Endian)
-    payload[1] = (total_water_pulses >> 24) & 0xFF;
-    payload[2] = (total_water_pulses >> 16) & 0xFF;
-    payload[3] = (total_water_pulses >> 8) & 0xFF;
-    payload[4] = total_water_pulses & 0xFF;
-    
-    payload[5] = battery_level;
-    
-    // Stavový byte (Bit 0: Dveře, Bit 1: Voda)
-    payload[6] = 0x00;
-    if (door_state == GPIO_PIN_SET) payload[6] |= (1 << 0);
-    // Pozn.: Detekci vody do statusu dáváme jen, pokud byl msg_type HEARTBEAT nebo WATER,
-    // pro zjednodušení v tomto kódu vynecháváme detailní stavovou logiku lana pro jiné typy zpráv.
+  Telemetry_BuildPayload(&telemetryState,
+               HAL_LPTIM_ReadCounter(&hlptim1),
+               (TelemetryMessageType_t)msg_type,
+               battery_level,
+               door_open,
+               water_detected,
+               &payload);
 
     appData.Port = 1;
-    appData.Buffer = payload;
-    appData.BufferSize = 7;
+  appData.Buffer = payload.bytes;
+  appData.BufferSize = payload.size;
 
     // Odeslání pomocí LoRaWAN middleware (potvrzená zpráva pro alarmy)
-    if (msg_type == 0x01) { // HEARTBEAT
+  if (!payload.confirmed) {
         LmHandlerSend(&appData, LORAMAC_HANDLER_UNCONFIRMED_MSG, NULL, false);
     } else {
         LmHandlerSend(&appData, LORAMAC_HANDLER_CONFIRMED_MSG, NULL, false);
@@ -154,6 +137,7 @@ int main(void) {
 
     // Spuštění hardwarového čítače pulzů (LPTIM)
     HAL_LPTIM_Counter_Start(&hlptim1, 0xFFFF);
+    Telemetry_InitState(&telemetryState, HAL_LPTIM_ReadCounter(&hlptim1));
 
     // Nastavení prvního probuzení přes RTC (za 24 hodin)
     // SetRTCWakeupTimer(RTC_WAKEUP_SECONDS);
