@@ -43,6 +43,8 @@ jobs:
           TELEMETRY_LORAWAN_REGION: ${{ vars.TELEMETRY_LORAWAN_REGION || 'LORAMAC_REGION_EU868' }}
           TELEMETRY_LORAWAN_ACTIVATION: ${{ vars.TELEMETRY_LORAWAN_ACTIVATION || 'ACTIVATION_TYPE_OTAA' }}
           TELEMETRY_HEARTBEAT_MS: ${{ vars.TELEMETRY_HEARTBEAT_MS || '30000' }}
+          TELEMETRY_ENFORCE_DEVICE_METADATA: ${{ vars.TELEMETRY_ENFORCE_DEVICE_METADATA || '1' }}
+          TELEMETRY_ENFORCE_CUSTOM_KEYS: ${{ vars.TELEMETRY_ENFORCE_CUSTOM_KEYS || '0' }}
         run: |
           chmod +x scripts/package_production_artifacts.sh
           ./scripts/package_production_artifacts.sh
@@ -55,6 +57,54 @@ jobs:
           unzip -l "$BUNDLE" | grep -q "wio-e5-telemetry-production/docs/build_manifest_full.json"
           unzip -l "$BUNDLE" | grep -q "wio-e5-telemetry-production/docs/build_manifest_redacted.json"
           unzip -l "$BUNDLE" | grep -q "wio-e5-telemetry-production/docs/build_manifest_summary.txt"
+
+      - name: Validate manifest schema and key fields
+        run: |
+          set -euo pipefail
+          BUNDLE="Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip"
+          unzip -p "$BUNDLE" wio-e5-telemetry-production/docs/build_manifest_full.json > /tmp/build_manifest_full.json
+          unzip -p "$BUNDLE" wio-e5-telemetry-production/docs/build_manifest_redacted.json > /tmp/build_manifest_redacted.json
+          python3 <<'PY'
+          import json
+          import re
+
+          with open('/tmp/build_manifest_full.json', encoding='utf-8') as f:
+            full = json.load(f)
+          with open('/tmp/build_manifest_redacted.json', encoding='utf-8') as f:
+            redacted = json.load(f)
+
+          required_paths = [
+            ('build', 'git_sha'),
+            ('device', 'device_id'),
+            ('device', 'serial_number'),
+            ('lorawan', 'device_eui'),
+            ('lorawan', 'join_eui'),
+            ('lorawan', 'app_key'),
+            ('lorawan', 'nwk_key'),
+            ('business_logic', 'profile'),
+          ]
+
+          for section, key in required_paths:
+            if key not in full.get(section, {}):
+              raise SystemExit(f"Missing full manifest field: {section}.{key}")
+
+          if not re.fullmatch(r'[0-9A-F]{16}', full['lorawan']['device_eui']):
+            raise SystemExit('Invalid device_eui format in full manifest')
+          if not re.fullmatch(r'[0-9A-F]{16}', full['lorawan']['join_eui']):
+            raise SystemExit('Invalid join_eui format in full manifest')
+          if not re.fullmatch(r'[0-9A-F]{32}', full['lorawan']['app_key']):
+            raise SystemExit('Invalid app_key format in full manifest')
+          if not re.fullmatch(r'[0-9A-F]{32}', full['lorawan']['nwk_key']):
+            raise SystemExit('Invalid nwk_key format in full manifest')
+
+          for key in ['device_eui', 'join_eui', 'app_key', 'nwk_key']:
+            masked = redacted.get('lorawan', {}).get(key, '')
+            if '*' not in masked:
+              raise SystemExit(f"Redacted manifest field is not masked: lorawan.{key}")
+
+          if full.get('artifacts') is None or len(full['artifacts']) != 4:
+            raise SystemExit('Expected 4 firmware artifacts in full manifest')
+          PY
 
       - name: Upload production artifact bundle
         uses: actions/upload-artifact@v4

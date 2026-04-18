@@ -49,6 +49,35 @@ manifest_value_or_default() {
   printf "%s" "${fallback_value}"
 }
 
+fail() {
+  local message="$1"
+  echo "[packaging] ERROR: ${message}" >&2
+  exit 1
+}
+
+validate_hex_length() {
+  local field_name="$1"
+  local field_value="$2"
+  local expected_length="$3"
+
+  if [[ ! "${field_value}" =~ ^[0-9A-F]+$ ]]; then
+    fail "${field_name} must contain only hex characters [0-9A-F], got '${field_value}'."
+  fi
+
+  if [[ "${#field_value}" -ne "${expected_length}" ]]; then
+    fail "${field_name} must have length ${expected_length}, got ${#field_value}."
+  fi
+}
+
+validate_decimal_field() {
+  local field_name="$1"
+  local field_value="$2"
+
+  if [[ ! "${field_value}" =~ ^[0-9]+$ ]]; then
+    fail "${field_name} must be a decimal number, got '${field_value}'."
+  fi
+}
+
 rm -rf "${BUNDLE_ROOT}"
 mkdir -p "${FIRMWARE_DIR}" "${FLASH_DIR}" "${DOCS_DIR}"
 
@@ -104,6 +133,49 @@ MANIFEST_GIT_REF="${GITHUB_REF_NAME:-$(git -C "${PROJECT_DIR}" rev-parse --abbre
 MANIFEST_CI_RUN_ID="${GITHUB_RUN_ID:-local}"
 MANIFEST_GENERATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 MANIFEST_TOOLCHAIN="$(arm-none-eabi-gcc --version 2>/dev/null | head -n 1 || echo "arm-none-eabi-gcc unavailable")"
+
+ENFORCE_DEVICE_METADATA="${TELEMETRY_ENFORCE_DEVICE_METADATA:-1}"
+ENFORCE_CUSTOM_KEYS="${TELEMETRY_ENFORCE_CUSTOM_KEYS:-0}"
+
+validate_hex_length "TELEMETRY_LORAWAN_DEVICE_EUI" "${MANIFEST_LORAWAN_DEVICE_EUI}" 16
+validate_hex_length "TELEMETRY_LORAWAN_JOIN_EUI" "${MANIFEST_LORAWAN_JOIN_EUI}" 16
+validate_hex_length "TELEMETRY_LORAWAN_APP_KEY" "${MANIFEST_LORAWAN_APP_KEY}" 32
+validate_hex_length "TELEMETRY_LORAWAN_NWK_KEY" "${MANIFEST_LORAWAN_NWK_KEY}" 32
+
+if [[ "${MANIFEST_LORAWAN_DEVICE_EUI}" == "${MANIFEST_LORAWAN_JOIN_EUI}" ]]; then
+  fail "Device EUI and Join EUI must be different for unique commissioning."
+fi
+
+validate_decimal_field "TELEMETRY_HEARTBEAT_MS" "${MANIFEST_DUTY_CYCLE_MS}"
+validate_decimal_field "TELEMETRY_LORAWAN_APP_PORT" "${MANIFEST_APP_PORT}"
+
+if [[ "${ENFORCE_DEVICE_METADATA}" == "1" ]]; then
+  if [[ "${MANIFEST_DEVICE_ID}" == "UNSPECIFIED_DEVICE" || -z "${MANIFEST_DEVICE_ID}" ]]; then
+    fail "TELEMETRY_DEVICE_ID must be set for production packaging."
+  fi
+
+  if [[ "${MANIFEST_SERIAL_NUMBER}" == "UNSPECIFIED_SERIAL" || -z "${MANIFEST_SERIAL_NUMBER}" ]]; then
+    fail "TELEMETRY_SERIAL_NUMBER must be set for production packaging."
+  fi
+fi
+
+if [[ "${ENFORCE_CUSTOM_KEYS}" == "1" ]]; then
+  if [[ "${MANIFEST_LORAWAN_DEVICE_EUI}" == "$(normalize_hex "${DEFAULT_DEV_EUI_RAW}")" ]]; then
+    fail "Custom TELEMETRY_LORAWAN_DEVICE_EUI is required (default value is not allowed)."
+  fi
+
+  if [[ "${MANIFEST_LORAWAN_JOIN_EUI}" == "$(normalize_hex "${DEFAULT_JOIN_EUI_RAW}")" ]]; then
+    fail "Custom TELEMETRY_LORAWAN_JOIN_EUI is required (default value is not allowed)."
+  fi
+
+  if [[ "${MANIFEST_LORAWAN_APP_KEY}" == "$(normalize_hex "${DEFAULT_APP_KEY_RAW}")" ]]; then
+    fail "Custom TELEMETRY_LORAWAN_APP_KEY is required (default value is not allowed)."
+  fi
+
+  if [[ "${MANIFEST_LORAWAN_NWK_KEY}" == "$(normalize_hex "${DEFAULT_NWK_KEY_RAW}")" ]]; then
+    fail "Custom TELEMETRY_LORAWAN_NWK_KEY is required (default value is not allowed)."
+  fi
+fi
 
 export MANIFEST_DEVICE_ID
 export MANIFEST_SERIAL_NUMBER

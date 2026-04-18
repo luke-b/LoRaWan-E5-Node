@@ -60,6 +60,10 @@ make clean all
 ./scripts/package_production_artifacts.sh
 ```
 
+Recommended production guardrail:
+- Set `TELEMETRY_ENFORCE_CUSTOM_KEYS=1` before packaging.
+- Packaging then fails if LoRaWAN values match repository defaults.
+
 4. Confirm generated bundle exists:
 - `production-artifacts/wio-e5-telemetry-production-bundle.zip`
 

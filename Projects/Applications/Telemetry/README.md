@@ -96,6 +96,10 @@ Generated bundle now includes:
 - `docs/build_manifest_redacted.json` (masked values for sharing)
 - `docs/build_manifest_summary.txt` (human-readable checksum summary)
 
+Validation and enforcement flags:
+- `TELEMETRY_ENFORCE_DEVICE_METADATA=1` (default): fail packaging if `TELEMETRY_DEVICE_ID` or `TELEMETRY_SERIAL_NUMBER` is missing.
+- `TELEMETRY_ENFORCE_CUSTOM_KEYS=1`: fail packaging if LoRaWAN values still match defaults from source headers.
+
 Provisioning helper template:
 - `scripts/templates/device_provisioning.env.template`
 
