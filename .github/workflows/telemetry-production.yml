@@ -70,10 +70,10 @@ jobs:
           set -euo pipefail
           BUNDLE="Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip"
           unzip -p "$BUNDLE" wio-e5-telemetry-production/docs/build_manifest_redacted.json > /tmp/build_manifest_redacted.json
-          echo "MANIFEST_GIT_SHA=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["build"]["git_sha"])')" >> $GITHUB_ENV
-          echo "MANIFEST_DEVICE_ID=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["device"]["device_id"])')" >> $GITHUB_ENV
-          echo "MANIFEST_REGION=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["lorawan"]["region"])')" >> $GITHUB_ENV
-          echo "MANIFEST_PROFILE=$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["business_logic"]["profile"])')" >> $GITHUB_ENV
+          MANIFEST_GIT_SHA="$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["build"]["git_sha"])')"
+          MANIFEST_DEVICE_ID="$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["device"]["device_id"])')"
+          MANIFEST_REGION="$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["lorawan"]["region"])')"
+          MANIFEST_PROFILE="$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["business_logic"]["profile"])')"
 
           echo "## Telemetry Production Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
