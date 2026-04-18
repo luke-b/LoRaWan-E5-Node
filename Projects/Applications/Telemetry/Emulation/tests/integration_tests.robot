@@ -38,4 +38,15 @@ Should Validate Counter Overflow Handling
     Wait For Line On Uart    SCENARIO counter_overflow
     Wait For Line On Uart    PAYLOAD 01 00 00 00 05 C5 00 confirmed=false
     Wait For Line On Uart    ASSERT PASS overflow.pulses
+
+Should Validate Wake Decision Gating
+    Create Machine
+    Start Emulation
+    Wait For Line On Uart    SCENARIO wake_decisions
+    Wait For Line On Uart    ASSERT PASS door.not_pending
+    Wait For Line On Uart    ASSERT PASS door.pending_closed
+    Wait For Line On Uart    ASSERT PASS door.pending_open
+    Wait For Line On Uart    ASSERT PASS periodic.not_pending
+    Wait For Line On Uart    ASSERT PASS periodic.pending_dry
+    Wait For Line On Uart    ASSERT PASS periodic.pending_wet
     Wait For Line On Uart    PROJECT EXECUTION SUCCESSFUL

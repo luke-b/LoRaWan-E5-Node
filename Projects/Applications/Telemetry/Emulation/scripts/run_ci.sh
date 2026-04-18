@@ -48,7 +48,15 @@ fi
 log "  ✓ renode-test available"
 
 # Step 2: Clean and build
-log "Step 2: Building emulation firmware (BUILD_PROFILE=emulation)..."
+log "Step 2: Running host-native unit tests..."
+if ! make test-unit 2>&1 | tee "${ARTIFACTS_DIR}/unit.log"; then
+  error "Unit tests failed. See ${ARTIFACTS_DIR}/unit.log for details."
+  exit 1
+fi
+log "  ✓ Unit tests completed successfully"
+
+# Step 3: Clean and build emulation firmware
+log "Step 3: Building emulation firmware (BUILD_PROFILE=emulation)..."
 if ! make BUILD_PROFILE=emulation clean all 2>&1 | tee "${ARTIFACTS_DIR}/build.log"; then
   error "Compilation failed. See ${ARTIFACTS_DIR}/build.log for details."
   exit 1
@@ -62,8 +70,8 @@ if [[ ! -f "${PROJECT_DIR}/telemetry_emulation.elf" ]]; then
 fi
 log "  ✓ ELF generated: $(wc -c < ${PROJECT_DIR}/telemetry_emulation.elf) bytes"
 
-# Step 3: Run Renode tests
-log "Step 3: Running Renode emulation tests..."
+# Step 4: Run Renode tests
+log "Step 4: Running Renode emulation tests..."
 if ! renode-test Emulation/tests/integration_tests.robot \
   > >(tee "${ARTIFACTS_DIR}/uart.log") \
   2> >(tee -a "${ARTIFACTS_DIR}/uart.log" >&2); then
@@ -72,8 +80,8 @@ if ! renode-test Emulation/tests/integration_tests.robot \
 fi
 log "  ✓ All emulation tests passed"
 
-# Step 4: Collect reports
-log "Step 4: Collecting test reports..."
+# Step 5: Collect reports
+log "Step 5: Collecting test reports..."
 report_count=0
 for file in report.html log.html; do
   if [[ -f "${PROJECT_DIR}/${file}" ]]; then
@@ -85,13 +93,14 @@ for file in report.html log.html; do
   fi
 done
 
-# Step 5: Copy ELF to artifacts
+# Step 6: Copy ELF to artifacts
 cp "${PROJECT_DIR}/telemetry_emulation.elf" "${ARTIFACTS_DIR}/"
 log "  ✓ Copied telemetry_emulation.elf"
 
 # Final summary
 log ""
 log "========== CI SUMMARY =========="
+log "Unit:      ✓ PASSED"
 log "Build:     ✓ PASSED"
 log "Tests:     ✓ PASSED"
 log "Reports:   ✓ ${report_count} file(s)"

@@ -17,6 +17,7 @@
 #include "app_lorawan.h"
 #include "sys_app.h"
 #include "LmHandler.h"
+#include "telemetry_logic.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -159,29 +160,37 @@ int main(void) {
     // SetRTCWakeupTimer(RTC_WAKEUP_SECONDS);
 
     while (1) {
+      bool door_pending = false;
+      bool rtc_pending = false;
+
+      Telemetry_ConsumeWakeFlags(&flag_door_alarm, &flag_rtc_wakeup, &door_pending, &rtc_pending);
+
         // ---------------------------------------------------------
 // 1. ZPRACOVÁNÍ UDÁLOSTÍ (Pokud byl procesor probuzen)
 // ---------------------------------------------------------
         
         // A) Alarm: Otevřen poklop
-        if (flag_door_alarm) {
-            flag_door_alarm = 0; // Reset vlajky
+      if (door_pending) {
+        TelemetryEventAction_t door_action = TELEMETRY_EVENT_ACTION_NONE;
             
             // Softwarový debounce: Ověření, že kontakt je stále rozpojený (např. po 50 ms)
             HAL_Delay(50);
-            if (HAL_GPIO_ReadPin(DOOR_CONTACT_PORT, DOOR_CONTACT_PIN) == GPIO_PIN_SET) {
+        door_action = Telemetry_HandleDoorWake(door_pending,
+                                               HAL_GPIO_ReadPin(DOOR_CONTACT_PORT, DOOR_CONTACT_PIN) == GPIO_PIN_SET);
+        if (door_action == TELEMETRY_EVENT_ACTION_SEND_ALARM_DOOR) {
                 SendLoraMessage(MSG_TYPE_ALARM_DOOR);
             }
         }
         
         // B) Pravidelný 24h Heartbeat a kontrola vody
-        if (flag_rtc_wakeup) {
-            flag_rtc_wakeup = 0; // Reset vlajky
+      if (rtc_pending) {
+        TelemetryEventAction_t periodic_action = TELEMETRY_EVENT_ACTION_NONE;
             
             // Kontrola zaplavení WLD lanem
-            if (CheckWaterLeak()) {
+        periodic_action = Telemetry_HandlePeriodicWake(rtc_pending, CheckWaterLeak() != 0);
+        if (periodic_action == TELEMETRY_EVENT_ACTION_SEND_ALARM_WATER) {
                 SendLoraMessage(MSG_TYPE_ALARM_WATER);
-            } else {
+        } else if (periodic_action == TELEMETRY_EVENT_ACTION_SEND_HEARTBEAT) {
                 SendLoraMessage(MSG_TYPE_HEARTBEAT);
             }
             

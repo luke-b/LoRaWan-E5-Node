@@ -27,6 +27,7 @@
 #ifdef EMULATION_BUILD
 
 #include "telemetry_app.h"
+#include "telemetry_logic.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -159,6 +160,47 @@ static void run_scenario_counter_overflow(void)
     }
 }
 
+/**
+ * Scenario C: Validate wake decision handlers used by production main loop.
+ * Covers pending gating and debounce/water branch selection.
+ */
+static void run_scenario_wake_decisions(void)
+{
+    TelemetryEventAction_t action;
+
+    emu_puts("SCENARIO wake_decisions");
+
+    action = Telemetry_HandleDoorWake(false, true);
+    emu_puts((action == TELEMETRY_EVENT_ACTION_NONE) ?
+             "ASSERT PASS door.not_pending" :
+             "ASSERT FAIL door.not_pending");
+
+    action = Telemetry_HandleDoorWake(true, false);
+    emu_puts((action == TELEMETRY_EVENT_ACTION_NONE) ?
+             "ASSERT PASS door.pending_closed" :
+             "ASSERT FAIL door.pending_closed");
+
+    action = Telemetry_HandleDoorWake(true, true);
+    emu_puts((action == TELEMETRY_EVENT_ACTION_SEND_ALARM_DOOR) ?
+             "ASSERT PASS door.pending_open" :
+             "ASSERT FAIL door.pending_open");
+
+    action = Telemetry_HandlePeriodicWake(false, true);
+    emu_puts((action == TELEMETRY_EVENT_ACTION_NONE) ?
+             "ASSERT PASS periodic.not_pending" :
+             "ASSERT FAIL periodic.not_pending");
+
+    action = Telemetry_HandlePeriodicWake(true, false);
+    emu_puts((action == TELEMETRY_EVENT_ACTION_SEND_HEARTBEAT) ?
+             "ASSERT PASS periodic.pending_dry" :
+             "ASSERT FAIL periodic.pending_dry");
+
+    action = Telemetry_HandlePeriodicWake(true, true);
+    emu_puts((action == TELEMETRY_EVENT_ACTION_SEND_ALARM_WATER) ?
+             "ASSERT PASS periodic.pending_wet" :
+             "ASSERT FAIL periodic.pending_wet");
+}
+
 /* ── Entry point ───────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -168,6 +210,7 @@ int main(void)
 
     run_scenario_payloads();
     run_scenario_counter_overflow();
+    run_scenario_wake_decisions();
 
     emu_puts("PROJECT EXECUTION SUCCESSFUL");
 

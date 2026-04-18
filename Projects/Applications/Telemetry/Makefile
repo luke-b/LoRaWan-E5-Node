@@ -59,12 +59,14 @@ ifeq ($(BUILD_PROFILE),emulation)
 SRC_FILES = \
 	./Core/Src/system_stm32wlxx.c \
 	./Core/Src/main_emulation.c \
+	./Core/Src/telemetry_logic.c \
 	./Core/Src/telemetry_app.c
 else
 # Default (hardware) build: full source list
 SRC_FILES = \
 	./Core/Src/main.c \
 	./Core/Src/system_stm32wlxx.c \
+	./Core/Src/telemetry_logic.c \
 	./Core/Src/stm32wlxx_hal_msp.c \
 	./Core/Src/sys_app.c \
 	./Core/Src/adc_if.c \
@@ -159,18 +161,28 @@ clean:
 
 # ─── Unit tests (host-native, no HW required) ──────────────────────────────────
 UNIT_TEST_DIR  = Emulation/tests/unit
-UNIT_TEST_SRC  = $(UNIT_TEST_DIR)/test_telemetry_app.c \
-                 ./Core/Src/telemetry_app.c
-UNIT_TEST_BIN  = $(UNIT_TEST_DIR)/test_telemetry_app
+UNIT_TEST_APP_SRC   = $(UNIT_TEST_DIR)/test_telemetry_app.c \
+                      ./Core/Src/telemetry_app.c
+UNIT_TEST_APP_BIN   = $(UNIT_TEST_DIR)/test_telemetry_app
+UNIT_TEST_LOGIC_SRC = $(UNIT_TEST_DIR)/test_telemetry_logic.c \
+                      ./Core/Src/telemetry_logic.c
+UNIT_TEST_LOGIC_BIN = $(UNIT_TEST_DIR)/test_telemetry_logic
 
 test-unit:
-	@echo "[unit] Compiling unit tests..."
+	@echo "[unit] Compiling telemetry_app unit tests..."
 	gcc -std=c11 -Wall -Wextra -g \
 	    -I./Core/Inc \
-	    -o $(UNIT_TEST_BIN) \
-	    $(UNIT_TEST_SRC)
-	@echo "[unit] Running unit tests..."
-	$(UNIT_TEST_BIN)
+	    -o $(UNIT_TEST_APP_BIN) \
+	    $(UNIT_TEST_APP_SRC)
+	@echo "[unit] Compiling telemetry_logic unit tests..."
+	gcc -std=c11 -Wall -Wextra -g \
+	    -I./Core/Inc \
+	    -o $(UNIT_TEST_LOGIC_BIN) \
+	    $(UNIT_TEST_LOGIC_SRC)
+	@echo "[unit] Running telemetry_app unit tests..."
+	$(UNIT_TEST_APP_BIN)
+	@echo "[unit] Running telemetry_logic unit tests..."
+	$(UNIT_TEST_LOGIC_BIN)
 
 clean-unit:
-	rm -f $(UNIT_TEST_BIN)
+	rm -f $(UNIT_TEST_APP_BIN) $(UNIT_TEST_LOGIC_BIN)
