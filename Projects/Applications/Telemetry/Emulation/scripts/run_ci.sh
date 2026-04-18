@@ -79,7 +79,7 @@ for file in report.html log.html; do
   if [[ -f "${PROJECT_DIR}/${file}" ]]; then
     cp "${PROJECT_DIR}/${file}" "${ARTIFACTS_DIR}/${file}"
     log "  ✓ Copied ${file}"
-    ((report_count++))
+    report_count=$((report_count + 1))
   else
     warn "  Report not found: ${file}"
   fi

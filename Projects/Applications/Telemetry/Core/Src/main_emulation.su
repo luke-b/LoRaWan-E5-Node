@@ -1,0 +1,7 @@
+Core/Src/main_emulation.c:39:13:emu_putchar	16	static
+Core/Src/main_emulation.c:44:13:emu_puts	16	static
+Core/Src/main_emulation.c:54:13:emu_put_hex_byte	16	static
+Core/Src/main_emulation.c:61:13:emu_print_payload	32	static
+Core/Src/main_emulation.c:95:13:run_scenario_payloads	48	static
+Core/Src/main_emulation.c:134:13:run_scenario_counter_overflow	48	static
+Core/Src/main_emulation.c:164:5:main	8	static

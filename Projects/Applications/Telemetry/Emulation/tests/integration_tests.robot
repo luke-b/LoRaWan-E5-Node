@@ -9,12 +9,6 @@ ${ELF}          ${CURDIR}/../../telemetry_emulation.elf
 ${UART}         sysbus.uart1
 
 *** Keywords ***
-Setup
-    Execute Command          using sysbus
-
-Teardown
-    Execute Command          mach clear
-
 Create Machine
     Execute Command          mach create
     Execute Command          machine LoadPlatformDescription @${REPL}

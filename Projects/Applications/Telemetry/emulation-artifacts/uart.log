@@ -1,0 +1,22 @@
+Preparing suites
+Will run the following 1 test files:
+  - Emulation/tests/integration_tests.robot
+
+Starting suites
+Running suite on Renode pid 48 using port 49152: Emulation/tests/integration_tests.robot
++++++ Starting test 'integration_tests.Should Boot Emulated Telemetry Harness'
++++++ Finished test 'integration_tests.Should Boot Emulated Telemetry Harness' in 1.32 seconds with status [92mOK[0m
++++++ Starting test 'integration_tests.Should Validate Heartbeat And Alarm Payloads'
++++++ Finished test 'integration_tests.Should Validate Heartbeat And Alarm Payloads' in 0.24 seconds with status [92mOK[0m
++++++ Starting test 'integration_tests.Should Validate Counter Overflow Handling'
++++++ Finished test 'integration_tests.Should Validate Counter Overflow Handling' in 0.29 seconds with status [92mOK[0m
+Suite Emulation/tests/integration_tests.robot finished successfully in 2.19 seconds.
++++++ Finished suite [95m1/1[0m
+Cleaning up suites
+Closing Renode pid 48
+Renode pid 48 closed
+Aggregating all robot results
+Output:  /workspace/Projects/Applications/Telemetry/robot_output.xml
+Log:     /workspace/Projects/Applications/Telemetry/log.html
+Report:  /workspace/Projects/Applications/Telemetry/report.html
+Tests finished successfully :)

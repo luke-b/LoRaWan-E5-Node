@@ -1,4 +1,4 @@
-/workspaces/LoRaWan-E5-Node/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rtc.h:1527:26:LL_RTC_TIME_GetSubSecond	16	static
+/workspace/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rtc.h:1527:26:LL_RTC_TIME_GetSubSecond	16	static
 Core/Src/timer_if.c:183:21:TIMER_IF_Init	16	static
 Core/Src/timer_if.c:220:21:TIMER_IF_StartTimer	64	static
 Core/Src/timer_if.c:248:21:TIMER_IF_StopTimer	16	static

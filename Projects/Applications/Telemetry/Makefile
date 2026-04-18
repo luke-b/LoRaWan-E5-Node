@@ -9,31 +9,27 @@ OBJDUMP = arm-none-eabi-objdump
 SIZE = arm-none-eabi-size
 
 # Project name
-TARGET = telemetry
-
-BUILD_PROFILE ?= hardware
+# Support BUILD_PROFILE=emulation for Renode CI builds
+BUILD_PROFILE ?= default
 
 ifeq ($(BUILD_PROFILE),emulation)
-TARGET = telemetry_emulation
+  TARGET = telemetry_emulation
+  DEFINES = -DSTM32WLE5xx -DUSE_HAL_DRIVER -DDEBUG -DEMULATION_BUILD
+else
+  TARGET = telemetry
+  DEFINES = -DSTM32WLE5xx -DUSE_HAL_DRIVER -DDEBUG
 endif
 
 # MCU
 MCU = -mcpu=cortex-m4 -mthumb
 
-# Defines
-DEFINES = -DSTM32WLE5xx -DUSE_HAL_DRIVER -DDEBUG
-
-ifeq ($(BUILD_PROFILE),emulation)
-DEFINES = -DDEBUG
-endif
-
-# Project root
-ROOT = /workspaces/LoRaWan-E5-Node
+# Project root — derived from this Makefile's location so it works both on
+# the host (/workspaces/LoRaWan-E5-Node) and inside Docker (/workspace).
+ROOT = $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST))))../../..)
 
 # Includes
 INC_DIRS = \
 	-I./Core/Inc \
-	-I./Emulation/Inc \
 	-I./LoRaWAN/App \
 	-I./LoRaWAN/Target \
 	-I$(ROOT)/Middlewares/Third_Party/LoRaWAN/Mac \
@@ -56,20 +52,16 @@ INC_DIRS = \
 	-I$(ROOT)/Utilities/trace \
 	-I$(ROOT)/Utilities/trace/adv_trace
 
-
-COMMON_SRC_FILES = \
-	./Core/Src/telemetry_app.c
-
+# Source files
+# ── Source files ─────────────────────────────────────────────────────────────
 ifeq ($(BUILD_PROFILE),emulation)
+# Emulation build: only the harness + pure logic (no HAL, no LoRaWAN stack)
 SRC_FILES = \
-	./Emulation/Src/main_emulation.c \
-	./Emulation/Src/telemetry_emulation_log.c \
-	./Emulation/Src/system_init_stub.c \
-	$(COMMON_SRC_FILES)
-
-STARTUP = ./startup_stm32wle5jcix.s
-LDSCRIPT = ./STM32WLE5JCIX_FLASH.ld
+	./Core/Src/system_stm32wlxx.c \
+	./Core/Src/main_emulation.c \
+	./Core/Src/telemetry_app.c
 else
+# Default (hardware) build: full source list
 SRC_FILES = \
 	./Core/Src/main.c \
 	./Core/Src/system_stm32wlxx.c \
@@ -126,19 +118,25 @@ SRC_FILES = \
 	$(ROOT)/Utilities/misc/stm32_tiny_vsnprintf.c \
 	$(ROOT)/Utilities/sequencer/stm32_seq.c \
 	$(ROOT)/Utilities/timer/stm32_timer.c \
-	$(ROOT)/Utilities/trace/adv_trace/stm32_adv_trace.c \
-	$(COMMON_SRC_FILES)
-
-STARTUP = ./startup_stm32wle5jcix.s
-LDSCRIPT = ./STM32WLE5JCIX_FLASH.ld
+	$(ROOT)/Utilities/trace/adv_trace/stm32_adv_trace.c
 endif
+
+# Startup file
+STARTUP = ./startup_stm32wle5jcix.s
+
+# Linker script
+LDSCRIPT = ./STM32WLE5JCIX_FLASH.ld
 
 # Flags
 CFLAGS = $(MCU) $(DEFINES) $(INC_DIRS) -O0 -g3 -Wall -fmessage-length=0 -ffunction-sections -fdata-sections -fstack-usage
 LDFLAGS = $(MCU) -T$(LDSCRIPT) -Wl,--gc-sections -Wl,-Map=$(TARGET).map
 
 # Objects
+ifeq ($(BUILD_PROFILE),emulation)
 OBJ_FILES = $(SRC_FILES:.c=.o) $(STARTUP:.s=.o)
+else
+OBJ_FILES = $(SRC_FILES:.c=.o) $(STARTUP:.s=.o)
+endif
 
 # Rules
 all: $(TARGET).elf
@@ -157,3 +155,22 @@ $(TARGET).elf: $(OBJ_FILES)
 
 clean:
 	rm -f $(OBJ_FILES) $(TARGET).elf $(TARGET).hex $(TARGET).bin $(TARGET).map
+	rm -f telemetry_emulation.elf telemetry_emulation.hex telemetry_emulation.bin telemetry_emulation.map
+
+# ─── Unit tests (host-native, no HW required) ──────────────────────────────────
+UNIT_TEST_DIR  = Emulation/tests/unit
+UNIT_TEST_SRC  = $(UNIT_TEST_DIR)/test_telemetry_app.c \
+                 ./Core/Src/telemetry_app.c
+UNIT_TEST_BIN  = $(UNIT_TEST_DIR)/test_telemetry_app
+
+test-unit:
+	@echo "[unit] Compiling unit tests..."
+	gcc -std=c11 -Wall -Wextra -g \
+	    -I./Core/Inc \
+	    -o $(UNIT_TEST_BIN) \
+	    $(UNIT_TEST_SRC)
+	@echo "[unit] Running unit tests..."
+	$(UNIT_TEST_BIN)
+
+clean-unit:
+	rm -f $(UNIT_TEST_BIN)

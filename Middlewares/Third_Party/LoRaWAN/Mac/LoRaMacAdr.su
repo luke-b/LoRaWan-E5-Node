@@ -1,2 +1,2 @@
-/workspaces/LoRaWan-E5-Node/Middlewares/Third_Party/LoRaWAN/Mac/LoRaMacAdr.c:37:13:CalcNextV10X	56	static
-/workspaces/LoRaWan-E5-Node/Middlewares/Third_Party/LoRaWAN/Mac/LoRaMacAdr.c:123:6:LoRaMacAdrCalcNext	24	static
+/workspace/Middlewares/Third_Party/LoRaWAN/Mac/LoRaMacAdr.c:37:13:CalcNextV10X	56	static
+/workspace/Middlewares/Third_Party/LoRaWAN/Mac/LoRaMacAdr.c:123:6:LoRaMacAdrCalcNext	24	static
