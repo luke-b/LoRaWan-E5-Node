@@ -1,0 +1,56 @@
+name: Telemetry Production Build
+
+on:
+  push:
+    paths:
+      - .github/workflows/telemetry-production.yml
+      - Projects/Applications/Telemetry/**
+  pull_request:
+    paths:
+      - .github/workflows/telemetry-production.yml
+      - Projects/Applications/Telemetry/**
+  workflow_dispatch:
+
+jobs:
+  telemetry-production:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GNU Arm toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi make zip
+
+      - name: Build production firmware
+        working-directory: Projects/Applications/Telemetry
+        run: |
+          make clean all
+          ls -lah telemetry.elf telemetry.hex telemetry.bin telemetry.map
+
+      - name: Package production artifacts
+        working-directory: Projects/Applications/Telemetry
+        run: |
+          chmod +x scripts/package_production_artifacts.sh
+          ./scripts/package_production_artifacts.sh
+          ls -lah production-artifacts
+
+      - name: Upload production artifact bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetry-production-bundle
+          path: |
+            Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Telemetry Production Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Production firmware build and packaging completed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Bundle contents" >> $GITHUB_STEP_SUMMARY
+          unzip -l Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip >> $GITHUB_STEP_SUMMARY

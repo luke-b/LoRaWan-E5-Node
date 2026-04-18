@@ -1,0 +1,46 @@
+Wio-E5 Telemetry Production Flash Guide
+======================================
+
+This package contains firmware built from production profile:
+- firmware/telemetry.hex  (recommended for flashing)
+- firmware/telemetry.bin
+- firmware/telemetry.elf
+- firmware/telemetry.map
+
+Flashing options
+----------------
+
+1) ST-LINK/SWD (recommended)
+   Linux/macOS:
+   - Use flash/flash_stlink.sh
+   - Example:
+     ./flash/flash_stlink.sh ../firmware/telemetry.hex "$HOME/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI"
+
+2) UART bootloader
+   Linux/macOS:
+   - Put board into ROM boot mode (BOOT button/pin + RESET).
+   - Use flash/flash_uart.sh
+   - Example:
+     ./flash/flash_uart.sh ../firmware/telemetry.hex /dev/ttyUSB0 115200 "$HOME/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI"
+
+   Windows:
+   - Put board into ROM boot mode.
+   - Use flash/flash_uart_windows.bat
+   - Example:
+     flash_uart_windows.bat ..\firmware\telemetry.hex COM5 115200 "C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin\STM32_Programmer_CLI.exe"
+
+Prerequisites
+-------------
+- STM32CubeProgrammer installed.
+- For UART method: proper USB-UART drivers and known COM/TTY port.
+
+Verification after flashing
+---------------------------
+- Device boots after reset.
+- LoRaWAN join path starts.
+- Heartbeat and alarm behavior follow expected application logic.
+
+Notes
+-----
+- This package is production build output, not emulation harness output.
+- If flashing fails, verify wiring, boot mode, and CLI path.
