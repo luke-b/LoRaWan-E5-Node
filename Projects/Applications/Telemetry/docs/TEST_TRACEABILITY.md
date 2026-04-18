@@ -13,6 +13,7 @@ This matrix tracks business requirements to automated tests and CI evidence.
 | REQ-007 | Periodic wake decision logic (water vs heartbeat) | Emulation/tests/unit/test_telemetry_logic.c | N/A (unit-covered rule) | .github/workflows/telemetry-emulation.yml |
 | REQ-008 | Door debounce gating (pending + sampled state) | Emulation/tests/unit/test_telemetry_logic.c | Emulation/tests/integration_tests.robot (wake_decisions) | .github/workflows/telemetry-emulation.yml |
 | REQ-009 | RTC periodic gating (pending + water decision) | Emulation/tests/unit/test_telemetry_logic.c | Emulation/tests/integration_tests.robot (wake_decisions) | .github/workflows/telemetry-emulation.yml |
+| REQ-010 | Concurrent wake handling without action loss (door + periodic) | Emulation/tests/unit/test_telemetry_logic.c | Emulation/tests/integration_tests.robot (interleaved_wakes) | .github/workflows/telemetry-emulation.yml |
 
 ## Coverage Policy
 

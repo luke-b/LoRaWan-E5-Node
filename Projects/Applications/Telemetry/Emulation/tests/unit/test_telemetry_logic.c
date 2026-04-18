@@ -139,6 +139,17 @@ static void test_HandlePeriodicWake_pendingWetSendsWaterAlarm(void)
             "periodic wake handler returns water alarm for wet state");
 }
 
+static void test_ConcurrentWakeIntent_producesBothActions(void)
+{
+  TelemetryEventAction_t doorAction = Telemetry_HandleDoorWake(true, true);
+  TelemetryEventAction_t periodicAction = Telemetry_HandlePeriodicWake(true, true);
+
+  ASSERT_EQ(doorAction, TELEMETRY_EVENT_ACTION_SEND_ALARM_DOOR,
+            "concurrent wake: door action remains alarm");
+  ASSERT_EQ(periodicAction, TELEMETRY_EVENT_ACTION_SEND_ALARM_WATER,
+            "concurrent wake: periodic action remains water alarm");
+}
+
 int main(void)
 {
   printf("=== Telemetry Logic Unit Tests ===\n");
@@ -156,6 +167,7 @@ int main(void)
   RUN_TEST(test_HandlePeriodicWake_notPendingDoesNothing);
   RUN_TEST(test_HandlePeriodicWake_pendingDrySendsHeartbeat);
   RUN_TEST(test_HandlePeriodicWake_pendingWetSendsWaterAlarm);
+  RUN_TEST(test_ConcurrentWakeIntent_producesBothActions);
 
   printf("\n============================\n");
   printf("Ran %d tests: %d passed, %d failed\n", g_tests_run, g_tests_passed, g_tests_failed);

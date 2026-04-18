@@ -49,4 +49,13 @@ Should Validate Wake Decision Gating
     Wait For Line On Uart    ASSERT PASS periodic.not_pending
     Wait For Line On Uart    ASSERT PASS periodic.pending_dry
     Wait For Line On Uart    ASSERT PASS periodic.pending_wet
+
+Should Validate Interleaved Door And Periodic Wakes
+    Create Machine
+    Start Emulation
+    Wait For Line On Uart    SCENARIO interleaved_wakes
+    Wait For Line On Uart    ASSERT PASS interleave.both_actions
+    Wait For Line On Uart    PAYLOAD 02 00 00 00 01 C4 01 confirmed=true
+    Wait For Line On Uart    PAYLOAD 03 00 00 00 03 C3 02 confirmed=true
+    Wait For Line On Uart    ASSERT PASS interleave.order
     Wait For Line On Uart    PROJECT EXECUTION SUCCESSFUL

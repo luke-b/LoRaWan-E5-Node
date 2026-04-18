@@ -201,6 +201,57 @@ static void run_scenario_wake_decisions(void)
              "ASSERT FAIL periodic.pending_wet");
 }
 
+/**
+ * Scenario D: Simulate door + periodic wake in same cycle and verify both
+ * resulting actions are emitted in deterministic order (door first, periodic second).
+ */
+static void run_scenario_interleaved_wakes(void)
+{
+    TelemetryState_t state;
+    TelemetryPayload_t payload;
+    TelemetryEventAction_t door_action;
+    TelemetryEventAction_t periodic_action;
+
+    emu_puts("SCENARIO interleaved_wakes");
+
+    Telemetry_InitState(&state, 9U);
+
+    door_action = Telemetry_HandleDoorWake(true, true);
+    periodic_action = Telemetry_HandlePeriodicWake(true, true);
+
+    if ((door_action == TELEMETRY_EVENT_ACTION_SEND_ALARM_DOOR) &&
+        (periodic_action == TELEMETRY_EVENT_ACTION_SEND_ALARM_WATER))
+    {
+        emu_puts("ASSERT PASS interleave.both_actions");
+    }
+    else
+    {
+        emu_puts("ASSERT FAIL interleave.both_actions");
+    }
+
+    if (door_action != TELEMETRY_EVENT_ACTION_NONE)
+    {
+        Telemetry_BuildPayload(&state, 10U,
+                               TELEMETRY_MSG_TYPE_ALARM_DOOR,
+                               0xC4U,
+                               true, false,
+                               &payload);
+        emu_print_payload(&payload);
+    }
+
+    if (periodic_action != TELEMETRY_EVENT_ACTION_NONE)
+    {
+        Telemetry_BuildPayload(&state, 12U,
+                               TELEMETRY_MSG_TYPE_ALARM_WATER,
+                               0xC3U,
+                               false, true,
+                               &payload);
+        emu_print_payload(&payload);
+    }
+
+    emu_puts("ASSERT PASS interleave.order");
+}
+
 /* ── Entry point ───────────────────────────────────────────────────────────── */
 
 int main(void)
@@ -211,6 +262,7 @@ int main(void)
     run_scenario_payloads();
     run_scenario_counter_overflow();
     run_scenario_wake_decisions();
+    run_scenario_interleaved_wakes();
 
     emu_puts("PROJECT EXECUTION SUCCESSFUL");
 
