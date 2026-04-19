@@ -70,7 +70,7 @@ bool checkWaterLeak() {
     delay(10);
     int val = analogRead(WLD_ADC_PIN);
     digitalWrite(WLD_VCC_PIN, LOW);
-    return (val < 2000);
+    return (val > 2000);
 }
 
 uint8_t getBatteryLevel() {
@@ -160,6 +160,10 @@ void setup() {
     rtc.attachInterrupt(rtcInterrupt);
     LowPower.attachInterruptWakeup(DOOR_CONTACT_PIN, doorInterrupt, RISING);
 
+    // Set initial 24h alarm
+    uint32_t nowEpoch = rtc.getEpoch();
+    rtc.setAlarmEpoch(nowEpoch + 86400);
+
     sendLoraMessage(MSG_TYPE_HEARTBEAT);
 }
 
@@ -182,10 +186,10 @@ void loop() {
             Serial.println("HEARTBEAT");
             sendLoraMessage(MSG_TYPE_HEARTBEAT);
         }
-    }
 
-    uint32_t nowEpoch = rtc.getEpoch();
-    rtc.setAlarmEpoch(nowEpoch + 60);
+        uint32_t nowEpoch = rtc.getEpoch();
+        rtc.setAlarmEpoch(nowEpoch + 86400); // 24 hours
+    }
 
     Serial.println("Going to sleep...");
     delay(10);
