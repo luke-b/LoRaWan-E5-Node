@@ -100,6 +100,8 @@ Validation and enforcement flags:
 - `TELEMETRY_ENFORCE_DEVICE_METADATA=1` (default): fail packaging if `TELEMETRY_DEVICE_ID` or `TELEMETRY_SERIAL_NUMBER` is missing.
 - `TELEMETRY_ENFORCE_CUSTOM_KEYS=1`: fail packaging if LoRaWAN values still match defaults from source headers.
 
+Production CI applies `TELEMETRY_LORAWAN_*` values to `LoRaWAN/App/se-identity.h` before compiling firmware. This keeps the generated firmware, `build_manifest_full.json`, and CRA provisioning values aligned. If `TELEMETRY_LORAWAN_NWK_KEY` is omitted, the build-time identity step uses the same value as `TELEMETRY_LORAWAN_APP_KEY`, which is the expected setup for LoRaWAN 1.0.x deployments that expose a single OTAA AppKey.
+
 Provisioning helper template:
 - `scripts/templates/device_provisioning.env.template`
 

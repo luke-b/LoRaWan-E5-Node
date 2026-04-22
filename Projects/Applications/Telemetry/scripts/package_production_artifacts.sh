@@ -15,6 +15,11 @@ SE_IDENTITY_FILE="${PROJECT_DIR}/LoRaWAN/App/se-identity.h"
 LORA_APP_FILE="${PROJECT_DIR}/LoRaWAN/App/lora_app.h"
 TELEMETRY_APP_FILE="${PROJECT_DIR}/Core/Inc/telemetry_app.h"
 
+SAMPLE_LORAWAN_DEVICE_EUI="0080E10101010101"
+SAMPLE_LORAWAN_JOIN_EUI="0101010101010101"
+SAMPLE_LORAWAN_APP_KEY="2B7E151628AED2A6ABF7158809CF4F3C"
+SAMPLE_LORAWAN_NWK_KEY="2B7E151628AED2A6ABF7158809CF4F3C"
+
 extract_define_value() {
   local file_path="$1"
   local macro_name="$2"
@@ -160,19 +165,19 @@ if [[ "${ENFORCE_DEVICE_METADATA}" == "1" ]]; then
 fi
 
 if [[ "${ENFORCE_CUSTOM_KEYS}" == "1" ]]; then
-  if [[ "${MANIFEST_LORAWAN_DEVICE_EUI}" == "$(normalize_hex "${DEFAULT_DEV_EUI_RAW}")" ]]; then
+  if [[ "${MANIFEST_LORAWAN_DEVICE_EUI}" == "${SAMPLE_LORAWAN_DEVICE_EUI}" ]]; then
     fail "Custom TELEMETRY_LORAWAN_DEVICE_EUI is required (default value is not allowed)."
   fi
 
-  if [[ "${MANIFEST_LORAWAN_JOIN_EUI}" == "$(normalize_hex "${DEFAULT_JOIN_EUI_RAW}")" ]]; then
+  if [[ "${MANIFEST_LORAWAN_JOIN_EUI}" == "${SAMPLE_LORAWAN_JOIN_EUI}" ]]; then
     fail "Custom TELEMETRY_LORAWAN_JOIN_EUI is required (default value is not allowed)."
   fi
 
-  if [[ "${MANIFEST_LORAWAN_APP_KEY}" == "$(normalize_hex "${DEFAULT_APP_KEY_RAW}")" ]]; then
+  if [[ "${MANIFEST_LORAWAN_APP_KEY}" == "${SAMPLE_LORAWAN_APP_KEY}" ]]; then
     fail "Custom TELEMETRY_LORAWAN_APP_KEY is required (default value is not allowed)."
   fi
 
-  if [[ "${MANIFEST_LORAWAN_NWK_KEY}" == "$(normalize_hex "${DEFAULT_NWK_KEY_RAW}")" ]]; then
+  if [[ "${MANIFEST_LORAWAN_NWK_KEY}" == "${SAMPLE_LORAWAN_NWK_KEY}" ]]; then
     fail "Custom TELEMETRY_LORAWAN_NWK_KEY is required (default value is not allowed)."
   fi
 fi
