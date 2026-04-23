@@ -24,6 +24,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi make zip
 
+      - name: Apply LoRaWAN identity for firmware build
+        working-directory: Projects/Applications/Telemetry
+        env:
+          TELEMETRY_LORAWAN_DEVICE_EUI: ${{ secrets.TELEMETRY_LORAWAN_DEVICE_EUI || '' }}
+          TELEMETRY_LORAWAN_JOIN_EUI: ${{ secrets.TELEMETRY_LORAWAN_JOIN_EUI || '' }}
+          TELEMETRY_LORAWAN_APP_KEY: ${{ secrets.TELEMETRY_LORAWAN_APP_KEY || '' }}
+          TELEMETRY_LORAWAN_NWK_KEY: ${{ secrets.TELEMETRY_LORAWAN_NWK_KEY || '' }}
+          TELEMETRY_ENFORCE_CUSTOM_KEYS: ${{ vars.TELEMETRY_ENFORCE_CUSTOM_KEYS || '0' }}
+        run: |
+          REQUIRE_CUSTOM_KEYS=""
+          if [ "${TELEMETRY_ENFORCE_CUSTOM_KEYS}" = "1" ]; then
+            REQUIRE_CUSTOM_KEYS="--require-custom-keys"
+          fi
+          python3 scripts/apply_lorawan_identity.py ${REQUIRE_CUSTOM_KEYS}
+
       - name: Build production firmware
         working-directory: Projects/Applications/Telemetry
         run: |
@@ -119,6 +134,12 @@ jobs:
         run: |
           set -euo pipefail
           BUNDLE="Projects/Applications/Telemetry/production-artifacts/wio-e5-telemetry-production-bundle.zip"
+          if [ ! -f "$BUNDLE" ]; then
+            echo "## Telemetry Production Build Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Production bundle was not created; inspect the failed build or packaging step above." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
           unzip -p "$BUNDLE" wio-e5-telemetry-production/docs/build_manifest_redacted.json > /tmp/build_manifest_redacted.json
           MANIFEST_GIT_SHA="$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["build"]["git_sha"])')"
           MANIFEST_DEVICE_ID="$(python3 -c 'import json; print(json.load(open("/tmp/build_manifest_redacted.json"))["device"]["device_id"])')"
